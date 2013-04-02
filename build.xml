@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- build file for quairy project -->
+<project name="quairy" default="init">
+	<!--property name="rootpath" value="../../.."/>
+	<property file="${rootpath}/build.properties"/>
+	<property name="source" value="."/>
+	<property name="deploypath" value="net/initzero/quairy"/-->
+
+	<!-- imports compilers and testing frameworks -->
+	<!--import file="${rootpath}/common.xml" /-->
+
+	<!--
+	<target name="all" depends="all-local"/>
+	<target name="all-local" depends="init, clean, deploylocal, test"/>
+	-->
+
+	<target name="init">
+		<!--echo message="Building /${deploypath} ..."/-->
+	</target>
+
+	<target name="clean">
+		<echo message="Nothing to clean."/>
+	</target>
+
+	<target name="deploylocal">
+		
+	</target>
+</project>

@@ -1,0 +1,14 @@
+Had to bring in air-signing-cert.p12 and update Quairy-app.xml for AIR 1.1
+Had to manually modify Quairy-app.xml and put in Quairy.swf for the content
+
+export FLEX_HOME=/home/sstone/working/flex-3.1.0
+export PATH=/usr/kerberos/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/local/lib/jdk/bin:/usr/local/lib/apache-ant/bin:/home/sstone/working/air-sdk-b1/bin:/home/sstone/working/flex-3.1.0/bin:/home/sstone/bin
+cd ~/working/quairy/trunk
+amxmlc src/Quairy.mxml -compiler.library-path+=libs
+adl src/Quairy-app.xml (requires X11-forwarding)
+cd src
+adt -package -storetype pkcs12 -keystore air-signing-cert.p12 Quairy.air Quairy-app.xml Quairy.swf
+password: stop*******
+
+
+

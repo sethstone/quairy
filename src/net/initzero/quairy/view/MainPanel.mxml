@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" 
+	xmlns:view="net.initzero.quairy.view.*" initialize="setupPseudoQueries()">
+	<mx:states>
+		<mx:State name="QueryEdit">
+			<!--mx:SetProperty target="{defaultStateCtrlBar}" name="visible" value="false"/>
+			<mx:SetProperty target="{defaultStateCtrlBar}" name="includeInLayout" value="false"/>
+			<mx:SetProperty target="{qeStateCtrlBar}" name="visible" value="true"/>
+			<mx:SetProperty target="{qeStateCtrlBar}" name="includeInLayout" value="true"/-->
+			<mx:SetProperty target="{queryBrowser}" name="visible" value="false"/>
+			<mx:SetProperty target="{queryEditor}" name="visible" value="true"/>
+		</mx:State>
+	</mx:states>
+	<view:DefaultMenuBar />
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ListEvent;
+			import mx.events.ItemClickEvent;
+			import mx.collections.ArrayCollection;
+			import net.initzero.quairy.vo.SavedQueryVO;
+			import pl.mooska.asql.*;
+			import pl.mooska.asql.events.*;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.Alert;
+
+			private var connector:Asql = new Asql(); //creating new instance of asql
+			
+			private var queries:Array = new Array();
+			[Bindable]
+			private var queriesCol:ArrayCollection;
+			private var qrySQLText:String = "";
+			[Bindable]
+			private var qryResult:Array = new Array();
+			
+			private function setupPseudoQueries():void
+			{
+				queries[0] = new SavedQueryVO();
+				queries[0].queryID = 1;
+				queries[0].querySQL = "SELECT * FROM contact LIMIT 10";
+				queries[0].description = "Show first 10 contacts";
+
+				queries[1] = new SavedQueryVO();
+				queries[1].queryID = 2;
+				queries[1].querySQL = "SELECT * FROM registration LIMIT 10";
+				queries[1].description = "Show first 10 registrations";
+
+				queries[2] = new SavedQueryVO();				
+				queries[2].queryID = 3;
+				queries[2].querySQL = "SELECT count(*) FROM registration WHERE status IN ('registered','cancelled')";
+				queries[2].description = "Total registration count";
+				
+				queriesCol = new ArrayCollection(queries);
+			}
+			
+			private function setupQuery(le:ListEvent):void
+			{
+				if (le.type == ListEvent.ITEM_DOUBLE_CLICK) {
+					trace("double-click");
+					qrySQLText = le.itemRenderer.data.querySQL;
+					runQuery();
+				} else if (le.type == ListEvent.ITEM_CLICK) {
+					trace("click");
+					qrySQLText = le.itemRenderer.data.querySQL;
+				}
+
+				trace(qrySQLText);
+			}
+			
+			private function runQuery():void
+			{ 
+				resultAreaVS.visible = true;
+				resultAreaVS.selectedChild = progress;
+				
+				connector.addEventListener( ASQLEvent.CONNECT, handleConnect ); 
+				connector.addEventListener( ASQLError.SQL_ERROR, handleError ); 
+				connector.addEventListener( ASQLEvent.SQL_OK, handleOK )//will be invoked after succefull update or insert 
+				connector.addEventListener( ASQLEvent.SQL_DATA, handleData ); 
+ 
+				connector.connect("localhost", "root", "YOURPASSWORDHERE", "YOURDATABASEHERE" , 3306);//connecting to the server
+			}
+		        
+			private function handleConnect ( evt:ASQLEvent ):void 
+			{
+				trace("ASQL is connected");
+				if ( currentState == "QueryEdit" ) {
+					connector.query(queryEditorTextArea.text);
+				}
+				else {
+					connector.query(qrySQLText);
+				}
+			}
+			private function handleError ( evt:ASQLError ):void
+			{
+				trace("Error catched "+evt.text);
+				resultAreaVS.selectedChild = results;
+			}
+			private function handleOK ( evt:ASQLEvent ):void
+			{
+				trace("Command was succesfull ");
+				resultAreaVS.selectedChild = results;
+			}
+			private function handleData ( evt:ASQLEvent ):void 
+			{ 
+				trace("Final data received"); 
+				trace( evt.data[0].campcount ); 
+				//connector.disconnect();
+				 
+				resultAreaVS.selectedChild = results;
+				dg1.columns = createColumns( evt.data[0] );
+				qryResult = evt.data;
+			} 
+			
+			private function createColumns ( item:Object ):Array 
+			{ 
+				var columns:Array = []; 
+				for(var i:String in item ) 
+				{ 
+					var column:DataGridColumn = new DataGridColumn(); 
+					column.dataField = i; 
+					columns.push( column ); 
+				} 
+				return columns; 
+			}
+		]]>
+	</mx:Script>
+	
+	<!--mx:Text text="Result: {qryResult}"  x="10" y="235"/-->
+	<mx:Panel x="10" y="30" width="700" height="200" layout="absolute" title="{currentState == 'QueryEdit' ? 'Edit' : 'Choose'} Query:" id="queryPanel">
+		<mx:VBox id="queryBrowser" height="100%" width="100%">
+			<mx:TileList dataProvider="{queriesCol}"
+				itemClick="setupQuery(event)" itemDoubleClick="setupQuery(event)" doubleClickEnabled="true"
+				labelField="description" direction="vertical" columnWidth="150" textAlign="left" height="100%" width="100%"/>
+			<mx:ControlBar>
+				<mx:Button label="Run Query" click="runQuery()" />
+				<mx:Button id="eqBtn" label="Edit Query" click="currentState='QueryEdit'" />
+				<mx:Button id="nqBtn" label="New Query" click="currentState='QueryEdit'" />
+			</mx:ControlBar>
+		</mx:VBox>
+		<mx:VBox id="queryEditor" height="100%" width="100%" includeInLayout="false" visible="false">
+			<mx:TextArea id="queryEditorTextArea" width="100%" height="100%">
+				<mx:text>
+					<![CDATA[SELECT
+	count(*) as RegCount
+FROM
+	registration
+WHERE
+	statusCode IN ('C','C1')]]>
+				</mx:text>
+			</mx:TextArea>
+			<mx:ControlBar>
+				<mx:Button label="Run Query" click="runQuery()" />
+				<mx:Button id="sqBtn" label="Save Query" />
+				<mx:Button id="vsqBtn" label="View Saved Queries" click="currentState=''"/>
+			</mx:ControlBar>
+		</mx:VBox>
+	</mx:Panel>	
+	<mx:ViewStack id="resultAreaVS" bottom="10" top="250" left="10" right="10" visible="false">
+		<mx:Canvas label="Results" id="results" width="100%" height="100%" verticalScrollPolicy="off" >
+			<mx:Box width="100%" height="100%">
+				<mx:DataGrid id="dg1" height="95%" dataProvider="{qryResult}"/>	
+			</mx:Box>
+		</mx:Canvas>
+		<mx:TitleWindow label="" id="progress" x="20" y="40" width="250" height="100">
+			<mx:ProgressBar x="10" y="10" id="runQueryProgress" indeterminate="true"/>
+		</mx:TitleWindow>
+	</mx:ViewStack>
+</mx:Canvas>

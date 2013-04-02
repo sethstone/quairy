@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:MenuBar xmlns:mx="http://www.adobe.com/2006/mxml" x="0" y="0" width="100%" 
+	dataProvider="{menuBarCollection}" labelField="@label" initialize="initMenu()">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.XMLListCollection;
+		
+			[Bindable]
+			public var menuBarCollection:XMLListCollection;
+			
+			private var menubarXML:XMLList =
+	            <>
+	                <menuitem label="Quairy" data="top">
+	                    <menuitem label="New Query..." data="1A"/>
+	                    <menuitem label="Import Navicat Queries" data="1B"/>
+	                </menuitem>
+	                <!--menuitem label="Menu2" data="top">
+	                    <menuitem label="MenuItem 2-A" type="check"  data="2A"/>
+	                    <menuitem type="separator"/>
+	                    <menuitem label="MenuItem 2-B" >
+	                        <menuitem label="SubMenuItem 3-A" type="radio"
+	                            groupName="one" data="3A"/>
+	                        <menuitem label="SubMenuItem 3-B" type="radio"
+	                            groupName="one" data="3B"/>
+	                    </menuitem>
+	                </menuitem-->
+	            </>;
+	            
+			// Event handler to initialize the MenuBar control.
+			private function initMenu():void {
+				menuBarCollection = new XMLListCollection(menubarXML);
+			}
+		]]>
+	</mx:Script>
+</mx:MenuBar>
